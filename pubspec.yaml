@@ -1,0 +1,33 @@
+name: fractals2d
+description: A sample command-line application.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+publish_to: none
+
+environment:
+  sdk: ^3.0.5
+
+# Add regular dependencies here.
+dependencies:
+  color: ^3.0.0
+  uuid: ^3.0.7
+  fractal:
+    path: ../fractal
+  # path: ^1.8.0
+  position_fractal:
+    path: '../position_fractal'
+  signed_fractal:
+    path: '../signed_fractal'
+  fractal_server:
+    path: '../fractal_server'
+  fractal_socket:
+    path: '../fractal_socket'
+  fractal_base:
+    path: '../fractal_base'
+  sqlite3_flutter_libs: ^0.5.15
+  sqlite3: ^2.1.0
+  crypto: ^3.0.3
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
