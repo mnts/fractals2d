@@ -3,11 +3,11 @@ import 'package:fractal/lib.dart';
 import 'package:position_fractal/fractals/index.dart';
 import 'package:position_fractal/props/position.dart';
 import 'package:signed_fractal/models/event.dart';
+import 'package:signed_fractal/models/rewriter.dart';
 import '../controllers/component.dart';
 import 'connection.dart';
-import 'package:position_fractal/fractals/offset.dart';
 
-class ComponentFractal extends EventFractal {
+class ComponentFractal extends EventFractal implements Rewritable {
   static final controller = ComponentsCtrl(
     extend: EventFractal.controller,
     name: 'component',
@@ -74,6 +74,7 @@ class ComponentFractal extends EventFractal {
   ComponentFractal({
     super.id,
     required SizeF size,
+    super.to,
     required OffsetF position,
     this.color = defaultColor,
     this.data,
@@ -85,8 +86,8 @@ class ComponentFractal extends EventFractal {
     }
   }
 
-  @override
   //get hashData => [...super.hashData];
+
   MP get _map => {
         'data': data?.hash ?? dataHash ?? '',
         'z': 0,
@@ -149,7 +150,7 @@ class ComponentFractal extends EventFractal {
   ///
   /// You should use it only with [removeChild] on the parent's component.
   removeParent() {
-    this.parentId = null;
+    parentId = null;
   }
 
   /// Sets the component's parent.
@@ -202,5 +203,15 @@ class ComponentFractal extends EventFractal {
       ),
     );
     */
+  }
+
+  final link = Writable();
+
+  @override
+  onWrite(f) {
+    switch (f.attr) {
+      case 'link':
+        link.value = f;
+    }
   }
 }

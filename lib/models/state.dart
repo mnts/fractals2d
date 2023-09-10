@@ -6,14 +6,14 @@ import 'package:signed_fractal/models/event.dart';
 class CanvasState extends EventFractal {
   double _scale = 1.0;
 
-  late final position = OffsetProp(this);
+  late final OffsetProp position = OffsetProp(this);
 
   double mouseScaleSpeed = 0.8;
   @override
   get dontStore => true;
 
   double maxScale = 8.0;
-  double minScale = 0.1;
+  double minScale = 1;
 
   Color color = Color.rgb(255, 255, 255);
 
@@ -30,8 +30,9 @@ class CanvasState extends EventFractal {
     notifyListeners();
   }
 
-  setPosition(OffsetF ofset) {
-    position.move(ofset);
+  setPosition(OffsetF offset) {
+    print(offset);
+    position.move(offset);
   }
 
   setScale(double scale) {
@@ -39,7 +40,7 @@ class CanvasState extends EventFractal {
   }
 
   updatePosition(OffsetF offset) {
-    position.move(position.value + offset);
+    setPosition(position.value + offset);
   }
 
   updateScale(double scale) {

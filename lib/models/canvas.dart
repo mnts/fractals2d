@@ -1,66 +1,32 @@
+import 'package:fractal/lib.dart';
 import 'package:fractals2d/models/policy.dart';
 import 'package:position_fractal/props/position.dart';
+import 'package:signed_fractal/signed_fractal.dart';
 import 'component.dart';
 import 'link_data.dart';
 import 'state.dart';
 import 'package:signed_fractal/models/event.dart';
 
-class CanvasModel extends EventFractal {
-  final components = ComponentFractal.controller;
+mixin CanvasMix on EventFractal {
+  final components = <ComponentFractal>[];
   final links = LinkFractal.controller;
+  final state = CanvasState();
 
-  BasePolicySet policy;
-  CanvasState get state => policy.state;
+  //bool filter(ComponentFractal c) =>
+
+  @override
+  canvasConsume(event) {
+    if (event is ComponentFractal) {
+      components.add(event);
+      notifyListeners();
+    }
+    //super.consume(event);
+  }
 
   late final position = OffsetProp(this);
 
-  CanvasModel(this.policy) {
-    init();
-  }
-
   @override
   get dontStore => true;
-
-  CanvasModel.fromJson(
-    Map<String, dynamic> json, {
-    required this.policy,
-    Function(Map<String, dynamic> json)? decodeCustomComponentFractal,
-    Function(Map<String, dynamic> json)? decodeCustomLinkData,
-  }) {
-    init();
-    /*
-    for (final componentJson in json['components'] as List) {
-      components[componentJson['id']] = ComponentFractal.fromJson(
-        componentJson,
-        decodeCustomComponentFractal: decodeCustomComponentFractal,
-      );
-    }
-
-    for (final linkJson in json['links'] as List) {
-      links[linkJson['id']] = LinkData.fromJson(
-        linkJson,
-        decodeCustomLinkData: decodeCustomLinkData,
-      );
-    }
-    */
-  }
-
-  Map<String, dynamic> toJson() => {
-        'components': components,
-        'links': links,
-      };
-
-  init() {
-    components.listen((f) {
-      notifyListeners();
-    });
-
-    /*
-    links.addListener(() {
-      notifyListeners();
-    });
-    */
-  }
 
   updateCanvas() {
     notifyListeners();
@@ -78,7 +44,7 @@ class CanvasModel extends EventFractal {
     return links[id]!;
   }
 
-  ComponentFractal getComponent(int id) => components[id]!;
+  ComponentFractal getComponent(int id) => ComponentFractal.controller[id]!;
 
   removeComponent(int id) {
     assert(
@@ -89,7 +55,7 @@ class CanvasModel extends EventFractal {
     removeComponentParent(id);
     removeParentFromChildren(id);
     removeComponentConnections(id);
-    components.remove(id);
+    ComponentFractal.controller.remove(id);
     notifyListeners();
   }
 
@@ -133,7 +99,7 @@ class CanvasModel extends EventFractal {
   }
 
   removeComponentConnections(int id) {
-    assert(components.keys.contains(id));
+    assert(ComponentFractal.controller.keys.contains(id));
 
     List<int> _linksToRemove = [];
 
@@ -162,11 +128,11 @@ class CanvasModel extends EventFractal {
       'model does not contain this component id: $componentId',
     );
     int zOrderMax = getComponent(componentId).zOrder;
-    components.values.forEach((component) {
+    for (var component in components) {
       if (component.zOrder > zOrderMax) {
         zOrderMax = component.zOrder;
       }
-    });
+    }
     getComponent(componentId).zOrder = zOrderMax + 1;
     notifyListeners();
     return zOrderMax + 1;
@@ -180,11 +146,11 @@ class CanvasModel extends EventFractal {
       'model does not contain this component id: $componentId',
     );
     int zOrderMin = getComponent(componentId).zOrder;
-    components.values.forEach((component) {
+    for (var component in components) {
       if (component.zOrder < zOrderMin) {
         zOrderMin = component.zOrder;
       }
-    });
+    }
     getComponent(componentId).zOrder = zOrderMin - 1;
     notifyListeners();
     return zOrderMin - 1;
@@ -200,8 +166,8 @@ class CanvasModel extends EventFractal {
   }
 
   removeAllLinks() {
-    components.values.forEach((component) {
+    for (var component in components) {
       removeComponentConnections(component.id);
-    });
+    }
   }
 }

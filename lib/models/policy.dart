@@ -1,9 +1,12 @@
 import 'package:fractals2d/models/canvas.dart';
 import 'package:fractals2d/models/state.dart';
+import 'package:signed_fractal/signed_fractal.dart';
 
-class BasePolicySet {
-  late final CanvasModel model;
-  late final CanvasState state;
+class BasePolicySet extends FChangeNotifier {
+  final CanvasMix model;
+  final CanvasState state = CanvasState();
+
+  BasePolicySet(this.model) {}
 
   /*
   /// Allows you to read all data from diagram/canvas model.

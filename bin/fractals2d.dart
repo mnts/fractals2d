@@ -7,8 +7,8 @@ import 'package:fractal_socket/socket.dart';
 import 'package:fractals2d/lib.dart';
 import 'package:fractal/utils/random.dart';
 
-void main(List<String> arguments) async {
-  FileF.path = '../';
+void main(List<String> args) async {
+  FileF.path = './';
   await DBF.initiate();
   Fractals2d.init();
 
@@ -16,6 +16,7 @@ void main(List<String> arguments) async {
   print(dir);
 
   FServer(
+    port: args.isNotEmpty ? int.parse(args[0]) : 8800,
     buildSocket: (name) => FSocket(
       name: name,
     ),

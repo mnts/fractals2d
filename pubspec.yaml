@@ -16,6 +16,8 @@ dependencies:
   # path: ^1.8.0
   position_fractal:
     path: '../position_fractal'
+  app_fractal:
+    path: '../app_fractal'
   signed_fractal:
     path: '../signed_fractal'
   fractal_server:
