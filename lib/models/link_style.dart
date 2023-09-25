@@ -46,12 +46,12 @@ class LinkStyle {
   /// Defines a visual design of a link on the canvas.
   const LinkStyle({
     this.lineType = LineType.solid,
-    this.arrowType = ArrowType.none,
-    this.backArrowType = ArrowType.none,
-    this.arrowSize = 8,
-    this.backArrowSize = 8,
+    this.arrowType = ArrowType.pointedArrow,
+    this.backArrowType = ArrowType.centerCircle,
+    this.arrowSize = 6,
+    this.backArrowSize = 4,
     this.lineWidth = 2,
-    this.color = const Color.rgb(0, 0, 0),
+    this.color = const Color.rgb(120, 20, 180),
   })  : assert(lineWidth > 0),
         assert(arrowSize > 0);
 

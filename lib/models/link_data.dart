@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:fractal/fractal.dart';
 import 'package:position_fractal/fractals/offset.dart';
 import 'package:signed_fractal/models/event.dart';
 
 import '../controllers/link.dart';
+import 'component.dart';
 import 'link_style.dart';
 
 /// Class that carries all link data.
@@ -20,11 +23,8 @@ class LinkFractal extends EventFractal {
 
   static int maxId = 0;
 
-  /// Id of source component.
-  final int sourceComponentId;
-
-  /// Id of target component.
-  final int targetComponentId;
+  late final ComponentFractal source;
+  late final ComponentFractal target;
 
   static const mainLinkStyle = LinkStyle();
   LinkStyle get linkStyle => mainLinkStyle;
@@ -32,22 +32,24 @@ class LinkFractal extends EventFractal {
   /// Points from which the link is drawn on canvas.
   ///
   /// First and last points lay on the two components which are connected by this link.
-  List<OffsetF> linkPoints = [];
+  var linkPoints = <OffsetF>[];
 
   /// Defines the visibility of link's joints.
   bool areJointsVisible = false;
 
   /// Dynamic data for you to define your own data for this link.
-  dynamic data;
+  //dynamic data;
 
   /// Represents data of a link/connection in the model.
   LinkFractal({
     super.id,
-    this.linkPoints = const [],
-    required this.sourceComponentId,
-    required this.targetComponentId,
-    this.data,
-  }); // : linkStyle = linkStyle ?? LinkStyle();
+    super.to,
+    required this.source,
+    required this.target,
+    //this.data,
+  }) {
+    init();
+  } // : linkStyle = linkStyle ?? LinkStyle();
 
   /// Updates this link on the canvas.
   ///
@@ -75,8 +77,19 @@ class LinkFractal extends EventFractal {
   ///
   /// The points lie on the source and target components.
   setEndpoints(OffsetF start, OffsetF end) {
-    linkPoints[0] = start;
-    linkPoints[linkPoints.length - 1] = end;
+    //if (linkPoints.isEmpty) {
+    linkPoints = [
+      start,
+      //start + OffsetF(32, 0),
+      //end - OffsetF(32, 0),
+      end,
+    ];
+    /*
+    } else {
+      linkPoints[0] = start;
+      linkPoints[max(linkPoints.length - 1, 1)] = end;
+    }
+    */
     notifyListeners();
   }
 
@@ -143,23 +156,56 @@ class LinkFractal extends EventFractal {
     notifyListeners();
   }
 
-  LinkFractal.fromMap(
-    Map<String, dynamic> json, {
-    Function(Map<String, dynamic> json)? decodeCustomLinkData,
-  })  : sourceComponentId = json['source_component_id'],
-        targetComponentId = json['target_component_id'],
-        data = decodeCustomLinkData?.call(json['dynamic_data']) {
-    id = json['id'];
+  init() {
+    source.addLink(this);
+    target.addLink(this);
+    refreshEndPoints();
+  }
+
+  refreshEndPoints() {
+    if (!source.isPlaced || !target.isPlaced) return;
+    final sourceAlign = source.getLinkEndpointAlignment(
+      target.getPoint(),
+    );
+    final targetAlign = target.getLinkEndpointAlignment(
+      source.getPoint(),
+    );
+    setEndpoints(
+        source.getPoint(
+          sourceAlign.$1,
+          sourceAlign.$2,
+        ),
+        target.getPoint(
+          targetAlign.$1,
+          targetAlign.$2,
+        ));
+  }
+
+  LinkFractal.fromMap(MP m) : super.fromMap(m)
+  //data = decodeCustomLinkData?.call(json['dynamic_data'])
+  {
+    if (m['source'] case String sourceH) {
+      EventFractal.map.request(sourceH).then((fractal) {
+        source = fractal as ComponentFractal;
+        if (m['target'] case String targetH) {
+          EventFractal.map.request(targetH).then((fractal) {
+            target = fractal as ComponentFractal;
+            init();
+            notifyListeners();
+          });
+        }
+      });
+    }
   }
 
   @override
   MP toMap() => {
         'id': id,
-        'source_component_id': sourceComponentId,
-        'target_component_id': targetComponentId,
+        'source': source.hash,
+        'target': target.hash,
         'link_style': linkStyle,
         'link_points': linkPoints.map((point) => [point.dx, point.dy]).toList(),
-        'dynamic_data': data?.toJson(),
+        //'dynamic_data': data?.toJson(),
         ...super.toMap(),
       };
 }

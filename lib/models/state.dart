@@ -6,7 +6,7 @@ import 'package:signed_fractal/models/event.dart';
 class CanvasState extends EventFractal {
   double _scale = 1.0;
 
-  late final OffsetProp position = OffsetProp(this);
+  var position = OffsetF();
 
   double mouseScaleSpeed = 0.8;
   @override
@@ -24,23 +24,23 @@ class CanvasState extends EventFractal {
   bool isInitialized = false;
 
   double get scale => _scale;
-  CanvasState() {}
+  CanvasState();
 
   updateCanvas() {
     notifyListeners();
   }
 
   setPosition(OffsetF offset) {
-    print(offset);
-    position.move(offset);
+    position = offset;
   }
 
   setScale(double scale) {
     _scale = scale;
+    notifyListeners();
   }
 
   updatePosition(OffsetF offset) {
-    setPosition(position.value + offset);
+    setPosition(position + offset);
   }
 
   updateScale(double scale) {
@@ -48,16 +48,16 @@ class CanvasState extends EventFractal {
   }
 
   resetCanvasView() {
-    position.value = OffsetF.zero;
+    position = OffsetF.zero;
     _scale = 1.0;
     notifyListeners();
   }
 
   OffsetF fromCanvasCoordinates(OffsetF position) {
-    return (position - this.position.value) / scale;
+    return (position - this.position) / scale;
   }
 
   OffsetF toCanvasCoordinates(OffsetF position) {
-    return position * scale + this.position.value;
+    return position * scale + this.position;
   }
 }

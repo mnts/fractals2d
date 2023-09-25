@@ -5,26 +5,25 @@ import 'package:position_fractal/fractals/index.dart';
 import 'package:signed_fractal/models/event.dart';
 import 'package:signed_fractal/models/index.dart';
 import 'package:signed_fractal/models/rewriter.dart';
+import 'package:signed_fractal/signed_fractal.dart';
 
 import 'fractals2d.dart';
+import 'models/canvas.dart';
 
 export 'lib.dart';
 
 class Fractals2d {
   static final ctrls = <FractalCtrl>[
-    AppFractal.controller,
-    ScreenFractal.controller,
-    UserFractal.controller,
-    NodeFractal.controller,
+    CanvasFractal.controller,
     SizeFractal.controller,
     PositionFractal.controller,
+    LinkFractal.controller,
     ComponentFractal.controller,
-    WriterFractal.controller,
-    EventFractal.controller,
-    Fractal.controller,
   ];
 
   static Future<int> init() async {
+    await SignedFractal.init();
+    await AppFractal.init();
     for (final el in ctrls.reversed) {
       await el.init();
     }

@@ -1,5 +1,6 @@
 import 'package:color/color.dart';
 import 'package:fractal/lib.dart';
+import 'package:fractals2d/models/link_data.dart';
 import 'package:position_fractal/fractals/index.dart';
 import 'package:position_fractal/props/position.dart';
 import 'package:signed_fractal/models/event.dart';
@@ -30,6 +31,11 @@ class ComponentFractal extends EventFractal implements Rewritable {
   late final position = OffsetProp(this);
 
   @override
+  move() {
+    refreshLinks();
+  }
+
+  @override
   consume(event) {
     switch (event) {
       case (PositionFractal f):
@@ -37,6 +43,7 @@ class ComponentFractal extends EventFractal implements Rewritable {
       case (SizeFractal f):
         size.value = f.value;
     }
+    refreshLinks();
     super.consume(event);
   }
 
@@ -70,6 +77,71 @@ class ComponentFractal extends EventFractal implements Rewritable {
   static const defaultColor = Color.rgb(255, 255, 255);
 
   EventFractal? data;
+
+  final linksIn = <LinkFractal>[];
+  final linksOut = <LinkFractal>[];
+  refreshLinks() {
+    final links = [...linksIn, ...linksOut];
+    for (final link in links) {
+      link.refreshEndPoints();
+    }
+  }
+
+  bool get isPlaced => !(position.value.x == 0 ||
+      position.value.y == 0 ||
+      size.value.width == 0 ||
+      size.value.height == 0);
+
+  addLink(LinkFractal link) {
+    if (link.source == this && !linksOut.contains(link)) linksOut.add(link);
+    if (link.target == this && !linksIn.contains(link)) linksIn.add(link);
+    notifyListeners();
+  }
+
+  OffsetF getPoint([int x = 0, int y = 0]) {
+    return position.value +
+        OffsetF(
+          size.value.width * ((x + 1) / 2),
+          size.value.height * ((y + 1) / 2),
+        );
+  }
+
+  (int, int) getLinkEndpointAlignment(
+    OffsetF targetPoint,
+  ) {
+    var pointPosition =
+        targetPoint - (position.value + size.value.center(OffsetF.zero));
+    pointPosition = OffsetF(
+      pointPosition.dx / size.width,
+      pointPosition.dy / size.height,
+    );
+
+    switch (type) {
+      case 'oval':
+        final pointAlignment = pointPosition / pointPosition.distance;
+        return (pointAlignment.dx.round(), pointAlignment.dy.round());
+      case 'crystal':
+        OffsetF pointAlignment =
+            pointPosition / (pointPosition.dx.abs() + pointPosition.dy.abs());
+
+        return (pointAlignment.dx.round(), pointAlignment.dy.round());
+
+      default:
+        OffsetF pointAlignment;
+        if (pointPosition.dx.abs() >= pointPosition.dy.abs()) {
+          pointAlignment = OffsetF(
+            pointPosition.dx / pointPosition.dx.abs(),
+            pointPosition.dy / pointPosition.dx.abs(),
+          );
+        } else {
+          pointAlignment = OffsetF(
+            pointPosition.dx / pointPosition.dy.abs(),
+            pointPosition.dy / pointPosition.dy.abs(),
+          );
+        }
+        return (pointAlignment.dx.round(), pointAlignment.dy.round());
+    }
+  }
 
   ComponentFractal({
     super.id,
@@ -187,7 +259,7 @@ class ComponentFractal extends EventFractal implements Rewritable {
     print(m['data']);
     dataHash = m['data'];
     if (dataHash is String) {
-      EventFractal.request(dataHash!).then((fractal) {
+      EventFractal.map.request(dataHash!).then((fractal) {
         data = fractal;
         notifyListeners();
       });
