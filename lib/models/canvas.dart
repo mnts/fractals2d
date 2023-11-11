@@ -28,6 +28,7 @@ class CanvasFractal extends ScreenFractal with CanvasMix {
 
   CanvasFractal({
     required super.name,
+    super.to,
   });
 
   @override

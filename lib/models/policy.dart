@@ -4,7 +4,7 @@ import 'package:signed_fractal/signed_fractal.dart';
 
 class BasePolicySet extends FChangeNotifier {
   final CanvasMix model;
-  CanvasState get state => model.state;
+  CanvasState get state => model.cState;
 
   BasePolicySet(this.model) {}
 

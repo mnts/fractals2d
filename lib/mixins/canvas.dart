@@ -10,7 +10,7 @@ import 'package:signed_fractal/models/event.dart';
 mixin CanvasMix on EventFractal {
   final components = <ComponentFractal>[];
   final links = <LinkFractal>[];
-  final state = CanvasState();
+  final cState = CanvasState();
 
   //bool filter(ComponentFractal c) =>
 
