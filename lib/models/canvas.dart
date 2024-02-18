@@ -16,12 +16,13 @@ class CanvasCtrl<T extends CanvasFractal> extends ScreenCtrl<T> {
 
 class CanvasFractal extends ScreenFractal with CanvasMix {
   static final controller = CanvasCtrl(
-      extend: ScreenFractal.controller,
-      make: (d) => switch (d) {
-            MP() => CanvasFractal.fromMap(d),
-            String s => CanvasFractal(name: s),
-            Object() || null => throw ('wrong')
-          });
+    extend: ScreenFractal.controller,
+    make: (d) => switch (d) {
+      MP() => CanvasFractal.fromMap(d),
+      String s => CanvasFractal(name: s),
+      Object() || null => throw ('wrong')
+    },
+  );
 
   @override
   CanvasCtrl get ctrl => controller;

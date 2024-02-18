@@ -7,10 +7,7 @@ class LinksCtrl<T extends LinkFractal> extends EventsCtrl<T> {
     super.name = 'link',
     required super.make,
     required super.extend,
-    super.attributes = const [
-      Attr('target', String),
-      Attr('source', String),
-    ],
+    required super.attributes,
   }) {
     //initSql();
   }

@@ -50,18 +50,17 @@ mixin CanvasMix on EventFractal {
 
   removeComponent(ComponentFractal component) {
     final id = component.id;
-    /*
-    assert(
-      componentExists(id),
-      'model does not contain this component id: $id',
-    );
-    
-    removeComponentParent(id);
-    removeParentFromChildren(id);
-    removeComponentConnections(id);
-    ComponentFractal.controller.map.remove(id);
+
+    components.removeWhere((f) => f == component);
+    links.removeWhere((l) {
+      if (component.linksIn.contains(l) || component.linksIn.contains(l)) {
+        l.remove();
+        return true;
+      }
+      return false;
+    });
+
     notifyListeners();
-    */
   }
 
   /// Removes the component's parent from a component.

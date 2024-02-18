@@ -7,13 +7,8 @@ class ComponentsCtrl<T extends ComponentFractal> extends EventsCtrl<T> {
     super.name = 'component',
     required super.extend,
     required super.make,
+    required super.attributes,
   }) {
     //initSql();
   }
-
-  @override
-  get attributes => const [
-        Attr('z', int),
-        Attr('data', String),
-      ];
 }

@@ -1,11 +1,10 @@
+import 'package:app_fractal/index.dart';
 import 'package:color/color.dart';
 import 'package:fractal/lib.dart';
 import 'package:fractals2d/models/link_data.dart';
 import 'package:position_fractal/fractals/index.dart';
 import 'package:position_fractal/props/position.dart';
-import 'package:signed_fractal/models/event.dart';
-import 'package:signed_fractal/models/post.dart';
-import 'package:signed_fractal/models/rewriter.dart';
+import 'package:signed_fractal/models/index.dart';
 import 'package:signed_fractal/services/map.dart';
 import '../controllers/component.dart';
 import 'connection.dart';
@@ -16,8 +15,12 @@ class ComponentFractal extends EventFractal with Rewritable {
     name: 'component',
     make: (d) => switch (d) {
       MP() => ComponentFractal.fromMap(d),
-      null || Object() => throw ('wrong event type')
+      null || Object() => throw ('wrong event type'),
     },
+    attributes: [
+      Attr(name: 'z', format: 'INTEGER'),
+      Attr(name: 'data', format: 'TEXT'),
+    ],
   );
 
   @override
@@ -71,7 +74,7 @@ class ComponentFractal extends EventFractal with Rewritable {
   ///
   /// The connection can be [ConnectionOut] for link going from this component
   /// or [ConnectionIn] for link going from another to this component.
-  final List<Connection> connections = [];
+  //final List<Connection> connections = [];
 
   /// Dynamic data for you to define your own data for this component.
 
@@ -108,7 +111,7 @@ class ComponentFractal extends EventFractal with Rewritable {
         );
   }
 
-  (int, int) getLinkEndpointAlignment(
+  OffsetF getLinkEndpoint(
     OffsetF targetPoint,
   ) {
     var pointPosition =
@@ -121,27 +124,31 @@ class ComponentFractal extends EventFractal with Rewritable {
     switch (type) {
       case 'oval':
         final pointAlignment = pointPosition / pointPosition.distance;
-        return (pointAlignment.dx.round(), pointAlignment.dy.round());
+        return OffsetF(pointAlignment.dx, pointAlignment.dy);
       case 'crystal':
         OffsetF pointAlignment =
             pointPosition / (pointPosition.dx.abs() + pointPosition.dy.abs());
 
-        return (pointAlignment.dx.round(), pointAlignment.dy.round());
+        return OffsetF(pointAlignment.dx, pointAlignment.dy);
 
       default:
-        OffsetF pointAlignment;
-        if (pointPosition.dx.abs() >= pointPosition.dy.abs()) {
-          pointAlignment = OffsetF(
-            pointPosition.dx / pointPosition.dx.abs(),
-            pointPosition.dy / pointPosition.dx.abs(),
-          );
-        } else {
-          pointAlignment = OffsetF(
-            pointPosition.dx / pointPosition.dy.abs(),
-            pointPosition.dy / pointPosition.dy.abs(),
-          );
-        }
-        return (pointAlignment.dx.round(), pointAlignment.dy.round());
+        OffsetF pointAlignment =
+            (pointPosition.dx.abs() >= pointPosition.dy.abs())
+                ? OffsetF(
+                    pointPosition.dx / pointPosition.dx.abs(),
+                    pointPosition.dy / pointPosition.dx.abs(),
+                  )
+                : OffsetF(
+                    pointPosition.dx / pointPosition.dy.abs(),
+                    pointPosition.dy / pointPosition.dy.abs(),
+                  );
+
+        final r = position.value +
+            OffsetF(
+              size.value.width * ((pointAlignment.dx + 1) / 2),
+              size.value.height * ((pointAlignment.dy + 1) / 2),
+            );
+        return OffsetF(r.x, r.y);
     }
   }
 
@@ -157,6 +164,60 @@ class ComponentFractal extends EventFractal with Rewritable {
     this.position.move(position);
     if (data != null) {
       dataHash = data!.hash;
+    }
+  }
+
+  receive(m) async {
+    switch (m) {
+      case MP m:
+        if (data case CatalogFractal filter) {
+          var ctrl = filter.source as EventsCtrl?;
+          ctrl ??= NodeFractal.controller;
+          m['type'] = ctrl.name;
+
+          final f = await ctrl.put(m);
+          if (f != null) filter.receive(f);
+
+          return;
+        }
+
+        final my = collect();
+
+        switch (my) {
+          case MP myM:
+            for (final kv in myM.entries) {
+              final eq = m[kv.key];
+              if (kv.value[0] == '=' &&
+                  (eq == null || eq != '${kv.value}'.substring(1))) {
+                return;
+              }
+              m[kv.key] = kv.value;
+            }
+
+            submit(m);
+        }
+    }
+  }
+
+  submit([MP? m]) {
+    final f = m ?? collect();
+    for (final link in linksOut) {
+      link.target.receive(f);
+    }
+  }
+
+  collect() {
+    switch (data) {
+      case NodeFractal node:
+        final MP m = {};
+        for (final ev in node.sorted.value) {
+          switch (ev) {
+            case NodeFractal n:
+              final val = this[n.name];
+              if (val != null) m[n.name] = val;
+          }
+        }
+        if (m.isNotEmpty) return m;
     }
   }
 
@@ -197,6 +258,7 @@ class ComponentFractal extends EventFractal with Rewritable {
     isHighlightVisible = false;
   }
 
+  /*
   /// Adds new connection to this component.
   ///
   /// Do not use it if you are not sure what you do. This is called in [connectTwoComponents] function.
@@ -210,6 +272,7 @@ class ComponentFractal extends EventFractal with Rewritable {
   removeConnection(int connectionId) {
     connections.removeWhere((conn) => conn.connectionId == connectionId);
   }
+  */
 
   /// Sets the component's parent.
   ///
@@ -261,7 +324,7 @@ class ComponentFractal extends EventFractal with Rewritable {
     print(m['data']);
     dataHash = m['data'];
     if (dataHash is String) {
-      EventFractal.map.request(dataHash!).then((fractal) {
+      NetworkFractal.request(dataHash!).then((fractal) {
         data = fractal;
         notifyListeners();
       });
@@ -283,11 +346,15 @@ class ComponentFractal extends EventFractal with Rewritable {
 
   @override
   onWrite(f) {
-    switch (f.attr) {
-      case 'link':
-        link.value = f;
-      case _:
-        super.onWrite(f);
+    final ok = super.onWrite(f);
+    if (ok) {
+      switch (f.attr) {
+        case 'link':
+          link.value = f;
+        case _:
+          super.onWrite(f);
+      }
     }
+    return ok;
   }
 }

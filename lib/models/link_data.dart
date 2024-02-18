@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:app_fractal/index.dart';
 import 'package:fractal/fractal.dart';
 import 'package:position_fractal/fractals/offset.dart';
 import 'package:signed_fractal/models/event.dart';
@@ -16,6 +17,16 @@ class LinkFractal extends EventFractal {
       Object() || null => throw ('wrong event type')
     },
     extend: EventFractal.controller,
+    attributes: [
+      Attr(
+        name: 'target',
+        format: 'TEXT',
+      ),
+      Attr(
+        name: 'source',
+        format: 'TEXT',
+      ),
+    ],
   );
 
   @override
@@ -90,7 +101,7 @@ class LinkFractal extends EventFractal {
       linkPoints[max(linkPoints.length - 1, 1)] = end;
     }
     */
-    notifyListeners();
+    to?.notifyListeners();
   }
 
   /// Returns list of all point of the link.
@@ -164,31 +175,26 @@ class LinkFractal extends EventFractal {
 
   refreshEndPoints() {
     if (!source.isPlaced || !target.isPlaced) return;
-    final sourceAlign = source.getLinkEndpointAlignment(
+    final sourcePoint = source.getLinkEndpoint(
       target.getPoint(),
     );
-    final targetAlign = target.getLinkEndpointAlignment(
+    final targetPoint = target.getLinkEndpoint(
       source.getPoint(),
     );
     setEndpoints(
-        source.getPoint(
-          sourceAlign.$1,
-          sourceAlign.$2,
-        ),
-        target.getPoint(
-          targetAlign.$1,
-          targetAlign.$2,
-        ));
+      sourcePoint,
+      targetPoint,
+    );
   }
 
   LinkFractal.fromMap(MP m) : super.fromMap(m)
   //data = decodeCustomLinkData?.call(json['dynamic_data'])
   {
     if (m['source'] case String sourceH) {
-      EventFractal.map.request(sourceH).then((fractal) {
+      NetworkFractal.request(sourceH).then((fractal) {
         source = fractal as ComponentFractal;
         if (m['target'] case String targetH) {
-          EventFractal.map.request(targetH).then((fractal) {
+          NetworkFractal.request(targetH).then((fractal) {
             target = fractal as ComponentFractal;
             init();
             notifyListeners();

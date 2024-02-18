@@ -1,3 +1,4 @@
+/*
 abstract class Connection {
   /// Id of this connection. It corresponds to link id.
   final int connectionId;
@@ -59,3 +60,4 @@ class ConnectionIn extends Connection {
           otherComponentId: otherComponentId,
         );
 }
+*/
