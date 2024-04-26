@@ -1,13 +1,10 @@
 import 'package:app_fractal/index.dart';
 import 'package:color/color.dart';
-import 'package:fractal/lib.dart';
 import 'package:fractals2d/models/link_data.dart';
 import 'package:position_fractal/fractals/index.dart';
 import 'package:position_fractal/props/position.dart';
 import 'package:signed_fractal/models/index.dart';
-import 'package:signed_fractal/services/map.dart';
 import '../controllers/component.dart';
-import 'connection.dart';
 
 class ComponentFractal extends EventFractal with Rewritable {
   static final controller = ComponentsCtrl(
