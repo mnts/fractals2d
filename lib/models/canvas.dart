@@ -32,11 +32,13 @@ class CanvasFractal extends ScreenFractal with CanvasMix {
     super.to,
   });
 
+  /*
   @override
   consume(event) {
-    canvasConsume(event);
+    //canvasConsume(event);
     return super.consume(event);
   }
+  */
 
   @override
   //get hashData => [...super.hashData, attr];

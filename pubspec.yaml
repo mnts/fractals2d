@@ -26,6 +26,8 @@ dependencies:
     path: '../fractal_socket'
   fractal_base:
     path: '../fractal_base'
+  currency_fractal:
+    path: '../../pub/currency_fractal'
   sqlite3_flutter_libs: ^0.5.15
   sqlite3: ^2.1.0
   crypto: ^3.0.3

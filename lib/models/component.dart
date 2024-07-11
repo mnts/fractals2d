@@ -3,6 +3,7 @@ import 'package:color/color.dart';
 import 'package:fractals2d/models/link_data.dart';
 import 'package:position_fractal/fractals/index.dart';
 import 'package:position_fractal/props/position.dart';
+import 'package:signed_fractal/fr.dart';
 import 'package:signed_fractal/models/index.dart';
 import '../controllers/component.dart';
 
@@ -31,6 +32,9 @@ class ComponentFractal extends EventFractal with Rewritable {
 
   late final size = SizeProp(this);
   late final position = OffsetProp(this);
+
+  @override
+  get eventsSource => EventFractal.controller;
 
   @override
   move() {
@@ -78,7 +82,7 @@ class ComponentFractal extends EventFractal with Rewritable {
   /// Represents data of a component in the model.
   static const defaultColor = Color.rgb(255, 255, 255);
 
-  EventFractal? data;
+  FR<EventFractal>? data;
 
   final linksIn = <LinkFractal>[];
   final linksOut = <LinkFractal>[];
@@ -94,9 +98,13 @@ class ComponentFractal extends EventFractal with Rewritable {
       size.value.width == 0 ||
       size.value.height == 0);
 
-  addLink(LinkFractal link) {
-    if (link.source == this && !linksOut.contains(link)) linksOut.add(link);
-    if (link.target == this && !linksIn.contains(link)) linksIn.add(link);
+  addLink(LinkFractal link) async {
+    if ((await link.source.future) == this && !linksOut.contains(link)) {
+      linksOut.add(link);
+    }
+    if ((await link.target.future) == this && !linksIn.contains(link)) {
+      linksIn.add(link);
+    }
     notifyListeners();
   }
 
@@ -155,13 +163,10 @@ class ComponentFractal extends EventFractal with Rewritable {
     super.to,
     required OffsetF position,
     this.color = defaultColor,
-    this.data,
-  }) {
+    EventFractal? data,
+  }) : data = FR.hn(data) {
     this.size.move(size);
     this.position.move(position);
-    if (data != null) {
-      dataHash = data!.hash;
-    }
   }
 
   receive(m) async {
@@ -173,7 +178,8 @@ class ComponentFractal extends EventFractal with Rewritable {
           m['type'] = ctrl.name;
 
           final f = await ctrl.put(m);
-          if (f != null) filter.receive(f);
+          //if (f.id != 0)
+          filter.receive(f);
 
           return;
         }
@@ -196,10 +202,10 @@ class ComponentFractal extends EventFractal with Rewritable {
     }
   }
 
-  submit([MP? m]) {
+  submit([MP? m]) async {
     final f = m ?? collect();
     for (final link in linksOut) {
-      link.target.receive(f);
+      (await link.target.future).receive(f);
     }
   }
 
@@ -221,7 +227,7 @@ class ComponentFractal extends EventFractal with Rewritable {
   //get hashData => [...super.hashData];
 
   MP get _map => {
-        'data': data?.hash ?? dataHash ?? '',
+        'data': data?.ref ?? '',
         'z': 0,
       };
 
@@ -270,7 +276,6 @@ class ComponentFractal extends EventFractal with Rewritable {
     connections.removeWhere((conn) => conn.connectionId == connectionId);
   }
   */
-
   /// Sets the component's parent.
   ///
   /// It's not possible to make a parent-child loop. (its ancestor cannot be its child)
@@ -308,24 +313,16 @@ class ComponentFractal extends EventFractal with Rewritable {
     return 'Component data ($id)';
   }
 
-  String? dataHash;
   ComponentFractal.fromMap(Map<String, dynamic> m)
       :
         //minSize = SizeF(json['min_size'][0], json['min_size'][1]),
         color = m['color'] != null ? Color.hex(m['color']) : defaultColor,
         //zOrder = 0,
+        data = FR(m['data']),
         super.fromMap(m)
   //.data = EventFractal.controller.request(dataId),
   //; decodeCustomComponentFractal?.call(json['dynamic_data'])
   {
-    print(m['data']);
-    dataHash = m['data'];
-    if (dataHash is String) {
-      NetworkFractal.request(dataHash!).then((fractal) {
-        data = fractal;
-        notifyListeners();
-      });
-    }
     //todo make connections work
     /*
     childrenIds.addAll(
