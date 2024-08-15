@@ -13,7 +13,7 @@ class CanvasState extends EventFractal {
   get dontStore => true;
 
   double maxScale = 8.0;
-  double minScale = 1;
+  double minScale = 0.1;
 
   Color color = Color.rgb(255, 255, 255);
 

@@ -10,7 +10,6 @@ environment:
 # Add regular dependencies here.
 dependencies:
   color: ^3.0.0
-  uuid: ^3.0.7
   fractal:
     path: ../fractal
   # path: ^1.8.0
@@ -33,5 +32,4 @@ dependencies:
   crypto: ^3.0.3
 
 dev_dependencies:
-  lints: ^2.0.0
-  test: ^1.21.0
+  lints: ^4.0.0

@@ -1,11 +1,8 @@
-import 'dart:math';
-
 import 'package:app_fractal/index.dart';
 import 'package:fractal/fractal.dart';
 import 'package:position_fractal/fractals/offset.dart';
 import 'package:signed_fractal/fr.dart';
 import 'package:signed_fractal/models/event.dart';
-
 import '../controllers/link.dart';
 import 'component.dart';
 import 'link_style.dart';

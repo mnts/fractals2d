@@ -339,8 +339,8 @@ class ComponentFractal extends EventFractal with Rewritable {
   final link = Writable();
 
   @override
-  onWrite(f) {
-    final ok = super.onWrite(f);
+  onWrite(f) async {
+    final ok = await super.onWrite(f);
     if (ok) {
       switch (f.attr) {
         case 'link':
