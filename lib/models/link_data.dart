@@ -1,5 +1,6 @@
 import 'package:app_fractal/index.dart';
 import 'package:fractal/fractal.dart';
+import 'package:fractals2d/mixins/canvas.dart';
 import 'package:position_fractal/fractals/offset.dart';
 import 'package:signed_fractal/fr.dart';
 import 'package:signed_fractal/models/event.dart';
@@ -18,11 +19,13 @@ class LinkFractal extends EventFractal {
     attributes: [
       Attr(
         name: 'target',
-        format: 'TEXT',
+        format: 'INTEGER',
+        isReference: true,
       ),
       Attr(
         name: 'source',
-        format: 'TEXT',
+        format: 'INTEGER',
+        isReference: true,
       ),
     ],
   );
@@ -32,8 +35,8 @@ class LinkFractal extends EventFractal {
 
   static int maxId = 0;
 
-  FR<ComponentFractal> source;
-  FR<ComponentFractal> target;
+  ComponentFractal source;
+  ComponentFractal target;
 
   static const mainLinkStyle = LinkStyle();
   LinkStyle get linkStyle => mainLinkStyle;
@@ -53,11 +56,10 @@ class LinkFractal extends EventFractal {
   LinkFractal({
     super.id,
     super.to,
-    required ComponentFractal source,
-    required ComponentFractal target,
+    required this.source,
+    required this.target,
     //this.data,
-  })  : source = FR.h(source),
-        target = FR.h(target) {
+  }) {
     init();
   } // : linkStyle = linkStyle ?? LinkStyle();
 
@@ -86,7 +88,7 @@ class LinkFractal extends EventFractal {
   /// Sets the position of both first and last point of the link.
   ///
   /// The points lie on the source and target components.
-  setEndpoints(OffsetF start, OffsetF end) async {
+  setEndpoints(OffsetF start, OffsetF end) {
     //if (linkPoints.isEmpty) {
     linkPoints = [
       start,
@@ -100,7 +102,7 @@ class LinkFractal extends EventFractal {
       linkPoints[max(linkPoints.length - 1, 1)] = end;
     }
     */
-    (await to?.future)?.notifyListeners();
+    if (to case CanvasMix canvas) canvas.updateCanvas();
   }
 
   /// Returns list of all point of the link.
@@ -167,15 +169,13 @@ class LinkFractal extends EventFractal {
   }
 
   init() async {
-    (await source.future).addLink(this);
-    (await target.future).addLink(this);
+    source.addLink(this);
+    target.addLink(this);
     await refreshEndPoints();
     notifyListeners();
   }
 
   Future<bool> refreshEndPoints() async {
-    final source = (await this.source.future);
-    final target = (await this.target.future);
     if (!source.isPlaced || !target.isPlaced) return false;
     final sourcePoint = source.getLinkEndpoint(
       target.getPoint(),
@@ -191,8 +191,8 @@ class LinkFractal extends EventFractal {
   }
 
   LinkFractal.fromMap(MP m)
-      : target = FR(m['target']),
-        source = FR(m['source']),
+      : target = m['target'],
+        source = m['source'],
         super.fromMap(m)
   //data = decodeCustomLinkData?.call(json['dynamic_data'])
   {
@@ -200,13 +200,10 @@ class LinkFractal extends EventFractal {
   }
 
   @override
-  MP toMap() => {
-        'id': id,
-        'source': source.ref,
-        'target': target.ref,
-        //'link_style': linkStyle,
-        'link_points': linkPoints.map((point) => [point.dx, point.dy]).toList(),
-        //'dynamic_data': data?.toJson(),
-        ...super.toMap(),
+  operator [](String key) => switch (key) {
+        'source' => source.hash,
+        'target' => target.hash,
+        _ => super[key],
       };
+  //'link_points': linkPoints.map((point) => [point.dx, point.dy]).toList(),
 }

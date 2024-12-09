@@ -9,40 +9,26 @@ import 'package:signed_fractal/models/event.dart';
 
 mixin CanvasMix on EventFractal {
   //final components = <ComponentFractal>[];
-  @override
-  late final components = CatalogFractal<ComponentFractal>(
-    filter: {'to': hash},
-    source: ComponentFractal.controller,
-  )
-    ..createdAt = 2
-    ..synch();
 
-  late final links = CatalogFractal<LinkFractal>(
-    filter: {'to': hash},
-    source: LinkFractal.controller,
-  )
-    ..createdAt = 2
-    ..synch();
+  final components = MapF<ComponentFractal>();
+  final links = MapF<LinkFractal>();
 
   //final links = <LinkFractal>[];
   final cState = CanvasState();
 
   //bool filter(ComponentFractal c) =>
 
-  /*
-  @override
   canvasConsume(event) {
     if (event is ComponentFractal) {
-      components.add(event);
+      components.input(event);
       notifyListeners();
     }
     if (event is LinkFractal) {
-      links.add(event);
+      links.input(event);
       notifyListeners();
     }
     //super.consume(event);
   }
-  */
 
   late final position = OffsetProp(this);
 
@@ -53,6 +39,7 @@ mixin CanvasMix on EventFractal {
     notifyListeners();
   }
 
+  /*
   bool linkExists(int id) {
     return links.byId(id) != null;
   }
@@ -61,6 +48,7 @@ mixin CanvasMix on EventFractal {
     return components.byId(id) != null;
   }
 
+  */
   LinkFractal? getLink(int id) {
     return links.list[id];
   }
@@ -175,7 +163,7 @@ mixin CanvasMix on EventFractal {
 
     //link.sourceComponent.removeConnection(linkId);
     //link.targetComponent.removeConnection(linkId);
-    links.byId(link.id)?.remove();
+    link.remove();
     notifyListeners();
   }
 

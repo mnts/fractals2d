@@ -7,7 +7,8 @@ import 'package:signed_fractal/fr.dart';
 import 'package:signed_fractal/models/index.dart';
 import '../controllers/component.dart';
 
-class ComponentFractal extends EventFractal with Rewritable {
+class ComponentFractal<T extends EventFractal> extends EventFractal
+    with Rewritable, InteractiveFractal, FlowF<T>, FilterableF<T> {
   static final controller = ComponentsCtrl(
     extend: EventFractal.controller,
     name: 'component',
@@ -98,14 +99,54 @@ class ComponentFractal extends EventFractal with Rewritable {
       size.value.width == 0 ||
       size.value.height == 0);
 
-  addLink(LinkFractal link) async {
-    if ((await link.source.future) == this && !linksOut.contains(link)) {
+  addLink(LinkFractal link) {
+    if ((link.source) == this && !linksOut.contains(link)) {
       linksOut.add(link);
     }
-    if ((await link.target.future) == this && !linksIn.contains(link)) {
+    if ((link.target) == this && !linksIn.contains(link)) {
       linksIn.add(link);
     }
     notifyListeners();
+  }
+
+  bool _initiated = false;
+  @override
+  Future<bool> initiate() async {
+    if (_initiated) return true;
+    _initiated = true;
+    //sub.list.forEach(receive);
+    //sub.listen(receive);
+    await refresh();
+
+    /*
+    EventFractal(
+      to: deviceInteraction,
+    ).synch();
+    */
+
+    if (!onlyLocal) {
+      NetworkFractal.out?.sink({
+        'cmd': 'subscribe',
+        'hash': hash,
+      });
+    }
+
+    return super.initiate();
+  }
+
+  @override
+  preload([type]) async {
+    //myInteraction;
+    await super.preload(type);
+    //if (type == 'node') nodes;
+
+    await initiate();
+
+    if (extend != null) {
+      await extend!.ready;
+      await extend!.preload(type);
+    }
+    return 1;
   }
 
   OffsetF getPoint([int x = 0, int y = 0]) {
@@ -169,8 +210,15 @@ class ComponentFractal extends EventFractal with Rewritable {
     this.position.move(position);
   }
 
-  receive(m) async {
+  @override
+  Future tell(m) async {
     switch (m) {
+      case InteractionFractal f:
+        final map = f.m.writtenMap;
+        if (await this.data?.future case EventsCtrl ctrl) {
+          return await ctrl.put(map);
+        }
+        break;
       case MP m:
         if (data case CatalogFractal filter) {
           var ctrl = filter.source as EventsCtrl?;
@@ -179,7 +227,7 @@ class ComponentFractal extends EventFractal with Rewritable {
 
           final f = await ctrl.put(m);
           //if (f.id != 0)
-          filter.receive(f);
+          filter.input(f);
 
           return;
         }
@@ -199,13 +247,15 @@ class ComponentFractal extends EventFractal with Rewritable {
 
             submit(m);
         }
+        _:
+        super.tell(m);
     }
   }
 
   submit([MP? m]) async {
     final f = m ?? collect();
     for (final link in linksOut) {
-      (await link.target.future).receive(f);
+      link.target.tell(f);
     }
   }
 
@@ -226,15 +276,11 @@ class ComponentFractal extends EventFractal with Rewritable {
 
   //get hashData => [...super.hashData];
 
-  MP get _map => {
-        'data': data?.ref ?? '',
-        'z': 0,
-      };
-
   @override
-  MP toMap() => {
-        ...super.toMap(),
-        ..._map,
+  operator [](String key) => switch (key) {
+        'data' => data?.ref ?? '',
+        'z' => 0,
+        _ => super[key],
       };
 
   /// Updates this component on the canvas.

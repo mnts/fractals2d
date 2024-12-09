@@ -1,8 +1,8 @@
 import 'package:app_fractal/screen.dart';
-import 'package:fractal/lib.dart';
 import 'package:fractals2d/mixins/canvas.dart';
+import 'package:signed_fractal/signed_fractal.dart';
 
-class CanvasCtrl<T extends CanvasFractal> extends ScreenCtrl<T> {
+class CanvasCtrl<T extends CanvasFractal> extends NodeCtrl<T> {
   CanvasCtrl({
     super.name = 'canvas',
     required super.make,
@@ -14,9 +14,9 @@ class CanvasCtrl<T extends CanvasFractal> extends ScreenCtrl<T> {
   final icon = IconF(0xf523);
 }
 
-class CanvasFractal extends ScreenFractal with CanvasMix {
+class CanvasFractal extends NodeFractal with CanvasMix {
   static final controller = CanvasCtrl(
-    extend: ScreenFractal.controller,
+    extend: NodeFractal.controller,
     make: (d) => switch (d) {
       MP() => CanvasFractal.fromMap(d),
       String s => CanvasFractal(name: s),
@@ -32,21 +32,19 @@ class CanvasFractal extends ScreenFractal with CanvasMix {
     super.to,
   });
 
-  /*
-  @override
-  consume(event) {
-    //canvasConsume(event);
-    return super.consume(event);
-  }
-  */
-
   @override
   //get hashData => [...super.hashData, attr];
 
-  CanvasFractal.fromMap(MP d) : super.fromMap(d);
+  CanvasFractal.fromMap(super.d) : super.fromMap();
 
   @override
   MP toMap() => {
         ...super.toMap(),
       };
+
+  @override
+  consume(f) {
+    super.canvasConsume(f);
+    super.consume(f);
+  }
 }
