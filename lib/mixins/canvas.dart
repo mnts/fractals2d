@@ -1,20 +1,17 @@
-import 'package:fractal/lib.dart';
-import 'package:fractals2d/models/policy.dart';
 import 'package:position_fractal/props/position.dart';
 import 'package:signed_fractal/signed_fractal.dart';
 import '../models/component.dart';
 import '../models/link_data.dart';
 import '../models/state.dart';
-import 'package:signed_fractal/models/event.dart';
 
-mixin CanvasMix on EventFractal {
+mixin CanvasMix on NodeFractal {
+  final cState = CanvasState();
   //final components = <ComponentFractal>[];
-
+  /*
   final components = MapF<ComponentFractal>();
   final links = MapF<LinkFractal>();
 
   //final links = <LinkFractal>[];
-  final cState = CanvasState();
 
   //bool filter(ComponentFractal c) =>
 
@@ -29,6 +26,7 @@ mixin CanvasMix on EventFractal {
     }
     //super.consume(event);
   }
+  */
 
   late final position = OffsetProp(this);
 
@@ -50,14 +48,12 @@ mixin CanvasMix on EventFractal {
 
   */
   LinkFractal? getLink(int id) {
-    return links.list[id];
+    return Fractal.map[id] as LinkFractal?;
   }
 
   removeComponent(ComponentFractal component) {
-    final id = component.id;
-
-    components.list.removeWhere((f) => f == component);
-    components.list.removeWhere((l) {
+    list.removeWhere((f) => f == component);
+    list.removeWhere((l) {
       if (component.linksIn.contains(l) || component.linksIn.contains(l)) {
         l.remove();
         return true;
@@ -134,7 +130,8 @@ mixin CanvasMix on EventFractal {
   /// Returns new zOrder
   int moveComponentToTheFront(ComponentFractal component) {
     int zOrderMax = component.zOrder;
-    for (var component in components.list) {
+    final l = list.whereType<ComponentFractal>();
+    for (var component in l) {
       if (component.zOrder > zOrderMax) {
         zOrderMax = component.zOrder;
       }
@@ -148,7 +145,8 @@ mixin CanvasMix on EventFractal {
   /// /// Returns new zOrder
   int moveComponentToTheBack(ComponentFractal component) {
     int zOrderMin = component.zOrder;
-    for (var component in components.list) {
+    final l = list.whereType<ComponentFractal>();
+    for (var component in l) {
       if (component.zOrder < zOrderMin) {
         zOrderMin = component.zOrder;
       }
@@ -161,14 +159,21 @@ mixin CanvasMix on EventFractal {
   removeLink(LinkFractal link) {
     //assert(linkExists(linkId), 'model does not contain this link id: $linkId');
 
-    //link.sourceComponent.removeConnection(linkId);
-    //link.targetComponent.removeConnection(linkId);
+    link.source.removeConnection(link);
+    link.target.removeConnection(link);
+    if (link.to case CanvasFractal canvas) {
+      canvas
+        ..list.remove(link)
+        ..notify(link);
+    }
+
     link.remove();
     notifyListeners();
   }
 
   removeAllLinks() {
-    for (var component in components.list) {
+    final l = list.whereType<ComponentFractal>();
+    for (var component in l) {
       removeComponentConnections(component.id);
     }
   }

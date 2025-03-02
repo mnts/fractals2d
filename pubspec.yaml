@@ -13,6 +13,8 @@ dependencies:
   fractal:
     path: ../fractal
   # path: ^1.8.0
+  afi:
+    path: '../afi'
   position_fractal:
     path: '../position_fractal'
   app_fractal:

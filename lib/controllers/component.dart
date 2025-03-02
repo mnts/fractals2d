@@ -11,4 +11,9 @@ class ComponentsCtrl<T extends ComponentFractal> extends EventsCtrl<T> {
   }) {
     //initSql();
   }
+
+  @override
+  put(m) {
+    return super.put(m);
+  }
 }

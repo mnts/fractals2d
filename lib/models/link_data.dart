@@ -1,32 +1,26 @@
 import 'package:app_fractal/index.dart';
-import 'package:fractal/fractal.dart';
+import 'package:color/color.dart';
 import 'package:fractals2d/mixins/canvas.dart';
 import 'package:position_fractal/fractals/offset.dart';
-import 'package:signed_fractal/fr.dart';
-import 'package:signed_fractal/models/event.dart';
 import '../controllers/link.dart';
 import 'component.dart';
 import 'link_style.dart';
 
 /// Class that carries all link data.
-class LinkFractal extends EventFractal {
+class LinkFractal extends EventFractal with ExtendableF {
   static final controller = LinksCtrl(
-    make: (d) => switch (d) {
-      MP() => LinkFractal.fromMap(d),
-      Object() || null => throw ('wrong event type')
-    },
+    make: (d) => LinkFractal.fromMap(d),
     extend: EventFractal.controller,
     attributes: [
       Attr(
         name: 'target',
-        format: 'INTEGER',
-        isReference: true,
+        format: FormatF.reference,
       ),
       Attr(
         name: 'source',
-        format: 'INTEGER',
-        isReference: true,
+        format: FormatF.reference,
       ),
+      ExtendableF.attr,
     ],
   );
 
@@ -58,10 +52,20 @@ class LinkFractal extends EventFractal {
     super.to,
     required this.source,
     required this.target,
+    NodeFractal? extend,
     //this.data,
   }) {
     init();
+
+    this.extend = extend;
+    listenExtended();
   } // : linkStyle = linkStyle ?? LinkStyle();
+
+  @override
+  Future<bool> constructFromMap(m) async {
+    if (m['extend'] case String extHash) setExtendable(extHash);
+    return super.constructFromMap(m);
+  }
 
   /// Updates this link on the canvas.
   ///
@@ -86,7 +90,8 @@ class LinkFractal extends EventFractal {
   }
 
   /// Sets the position of both first and last point of the link.
-  ///
+  ///import 'package:fractal/fractal.dart';
+
   /// The points lie on the source and target components.
   setEndpoints(OffsetF start, OffsetF end) {
     //if (linkPoints.isEmpty) {
@@ -198,6 +203,27 @@ class LinkFractal extends EventFractal {
   {
     init();
   }
+
+  var style = LinkStyle();
+
+  @override
+  notifyListeners() {
+    style = LinkStyle(
+      arrowType: switch (int.tryParse('${resolve('front')}')) {
+        int n => ArrowType.values[n],
+        _ => ArrowType.arrow,
+      },
+      backArrowType: switch (int.tryParse('${resolve('back')}')) {
+        int n => ArrowType.values[n],
+        _ => ArrowType.none,
+      },
+      color: Color.hex('${resolve('color') ?? '#000000'}'),
+    );
+    super.notifyListeners();
+  }
+
+  @override
+  resolve(key) => this[key] ?? extend?[key];
 
   @override
   operator [](String key) => switch (key) {

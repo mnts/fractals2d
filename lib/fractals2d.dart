@@ -5,6 +5,12 @@ import 'fractals2d.dart';
 export 'lib.dart';
 
 class Fractals2d {
+  static final functions = <String,
+      Future<PulseF?> Function(
+    SparkF,
+    //LinkFractal,
+  )>{};
+
   static final ctrls = <FractalCtrl>[
     CanvasFractal.controller,
     SizeFractal.controller,
@@ -19,6 +25,7 @@ class Fractals2d {
     for (final el in ctrls.reversed) {
       await el.init();
     }
+
     return 1;
   }
 }

@@ -25,6 +25,10 @@ class CanvasFractal extends NodeFractal with CanvasMix {
   );
 
   @override
+  get uis => ui;
+  static var ui = <String>[];
+
+  @override
   CanvasCtrl get ctrl => controller;
 
   CanvasFractal({
@@ -44,7 +48,7 @@ class CanvasFractal extends NodeFractal with CanvasMix {
 
   @override
   consume(f) {
-    super.canvasConsume(f);
+    //super.canvasConsume(f);
     super.consume(f);
   }
 }

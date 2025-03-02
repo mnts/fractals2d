@@ -6,7 +6,7 @@ class BasePolicySet extends FChangeNotifier {
   final CanvasMix model;
   CanvasState get state => model.cState;
 
-  BasePolicySet(this.model) {}
+  BasePolicySet({required this.model}) {}
 
   /*
   /// Allows you to read all data from diagram/canvas model.

@@ -5,3 +5,4 @@ export 'models/custom_component_data.dart';
 export 'models/custom_link_data.dart';
 export 'models/diagram.dart';
 export 'models/link_data.dart';
+export 'scheme.dart';

@@ -1,18 +1,24 @@
 import 'package:color/color.dart';
 
 enum ArrowType {
-  none,
-  arrow,
-  pointedArrow,
-  circle,
-  centerCircle,
-  semiCircle,
+  none, // No arrow/shape
+  arrow, // Simple triangle arrow
+  pointedArrow, // Sharper, more pointed arrow
+  circle, // Filled circle
+  centerCircle, // Circle with empty center (ring)
+  semiCircle, // Half circle
+  square, // Filled square
+  diamond, // Diamond/rhombus shape
+  triangle, // Filled triangle
+  star, // Star shape
+  hexagon, // Six-sided polygon
+  pentagon, // Five-sided polygon
 }
 
 enum LineType {
-  solid,
-  dashed,
-  dotted,
+  solid, // Continuous line
+  dashed, // Line with gaps
+  dotted, // Line with dots
 }
 
 class LinkStyle {
@@ -46,30 +52,41 @@ class LinkStyle {
   /// Defines a visual design of a link on the canvas.
   const LinkStyle({
     this.lineType = LineType.solid,
-    this.arrowType = ArrowType.pointedArrow,
-    this.backArrowType = ArrowType.centerCircle,
-    this.arrowSize = 6,
-    this.backArrowSize = 4,
-    this.lineWidth = 2,
-    this.color = const Color.rgb(120, 20, 180),
+    this.arrowType = ArrowType.arrow,
+    this.backArrowType = ArrowType.none,
+    this.arrowSize = 8,
+    this.backArrowSize = 6,
+    this.lineWidth = 3,
+    this.color = const Color.rgb(20, 20, 180),
   })  : assert(lineWidth > 0),
         assert(arrowSize > 0);
 
   double getEndShortening(ArrowType arrowType) {
-    double eps = 0.05;
     switch (arrowType) {
       case ArrowType.none:
-        return 0;
+        return 0; // No shape, no shortening
       case ArrowType.arrow:
-        return arrowSize - eps;
+        return arrowSize * 2; // Tip at endpoint, base behind
       case ArrowType.pointedArrow:
-        return (arrowSize * 2) - eps;
+        return arrowSize * 3; // Tip at endpoint, longer base behind
       case ArrowType.circle:
-        return arrowSize - eps;
+        return arrowSize; // Circle center behind, edge at endpoint
       case ArrowType.centerCircle:
-        return 0;
+        return -arrowSize; // Center at endpoint, edge ahead
       case ArrowType.semiCircle:
-        return arrowSize - eps;
+        return arrowSize; // Center behind, flat edge at endpoint
+      case ArrowType.square:
+        return arrowSize; // Center behind, edge at endpoint
+      case ArrowType.diamond:
+        return arrowSize; // Center behind, point at endpoint
+      case ArrowType.triangle:
+        return arrowSize * 2; // Tip at endpoint, base behind
+      case ArrowType.star:
+        return arrowSize; // Center behind, outer point at endpoint
+      case ArrowType.hexagon:
+        return arrowSize; // Center behind, edge at endpoint
+      case ArrowType.pentagon:
+        return arrowSize; // Center behind, edge at endpoint
     }
   }
 

@@ -1,14 +1,14 @@
 import 'package:app_fractal/index.dart';
 import 'package:color/color.dart';
 import 'package:fractals2d/models/link_data.dart';
+import 'package:fractals2d/models/link_style.dart';
 import 'package:position_fractal/fractals/index.dart';
 import 'package:position_fractal/props/position.dart';
-import 'package:signed_fractal/fr.dart';
-import 'package:signed_fractal/models/index.dart';
 import '../controllers/component.dart';
+import '../lib.dart';
 
 class ComponentFractal<T extends EventFractal> extends EventFractal
-    with Rewritable, InteractiveFractal, FlowF<T>, FilterableF<T> {
+    with Rewritable, InteractiveFractal, FlowF<T>, FilterF<T> {
   static final controller = ComponentsCtrl(
     extend: EventFractal.controller,
     name: 'component',
@@ -17,8 +17,12 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
       null || Object() => throw ('wrong event type'),
     },
     attributes: [
-      Attr(name: 'z', format: 'INTEGER'),
-      Attr(name: 'data', format: 'TEXT'),
+      Attr(name: 'z', format: FormatF.integer),
+      Attr(
+        name: 'data',
+        format: FormatF.reference,
+        canNull: true,
+      ),
     ],
   );
 
@@ -83,7 +87,7 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
   /// Represents data of a component in the model.
   static const defaultColor = Color.rgb(255, 255, 255);
 
-  FR<EventFractal>? data;
+  EventFractal? data;
 
   final linksIn = <LinkFractal>[];
   final linksOut = <LinkFractal>[];
@@ -141,11 +145,6 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
     //if (type == 'node') nodes;
 
     await initiate();
-
-    if (extend != null) {
-      await extend!.ready;
-      await extend!.preload(type);
-    }
     return 1;
   }
 
@@ -204,10 +203,30 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
     super.to,
     required OffsetF position,
     this.color = defaultColor,
-    EventFractal? data,
-  }) : data = FR.hn(data) {
+    this.data,
+  }) {
     this.size.move(size);
     this.position.move(position);
+  }
+
+  final tansformers = TransformerPreprocessor({});
+  SparkF digest(SparkF spark) {
+    final m = Transformer(
+      spark.map,
+      tansformers.preprocessed,
+    ).digest();
+
+    for (var link in linksIn.where(
+      (l) => l.linkStyle.arrowType == ArrowType.circle,
+    )) {
+      if (link['input'] case String input) {
+        m[input] = link.target.m.writtenMap;
+      }
+    }
+
+    print(m);
+
+    return SparkF(pulse: spark.pulse, map: m);
   }
 
   @override
@@ -215,10 +234,31 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
     switch (m) {
       case InteractionFractal f:
         final map = f.m.writtenMap;
-        if (await this.data?.future case EventsCtrl ctrl) {
-          return await ctrl.put(map);
+        final re = switch (this.data) {
+          EventsCtrl ctrl => await ctrl.put(map),
+          CatalogFractal cf => cf.input(f) ? f : null,
+          EventFractal ev => ev.tell(map),
+          _ => null,
+        };
+      case SparkF spark:
+        switch (data) {
+          case NodeFractal dataNode:
+            switch (await dataNode.tell(spark)) {
+              case SparkF reSpark:
+                spread(reSpark);
+            }
+          case null:
+            final reSpark = digest(spark);
+            spread(reSpark);
         }
-        break;
+        /*
+        final fName = '${this['function']}';
+        final fn = Fractals2d.functions[fName];
+        if (fn == null) return;
+        final re = await fn(spark);
+        */
+
+        return;
       case MP m:
         if (data case CatalogFractal filter) {
           var ctrl = filter.source as EventsCtrl?;
@@ -252,6 +292,15 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
     }
   }
 
+  @override
+  spread(thing) async {
+    for (var link in linksOut.where(
+      (l) => l.linkStyle.arrowType == ArrowType.arrow,
+    )) {
+      link.target.tell(thing);
+    }
+  }
+
   submit([MP? m]) async {
     final f = m ?? collect();
     for (final link in linksOut) {
@@ -278,9 +327,9 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
 
   @override
   operator [](String key) => switch (key) {
-        'data' => data?.ref ?? '',
+        'data' => data?.hash ?? '',
         'z' => 0,
-        _ => super[key],
+        _ => m[key]?.content ?? super[key],
       };
 
   /// Updates this component on the canvas.
@@ -307,20 +356,19 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
     isHighlightVisible = false;
   }
 
+  removeConnection(LinkFractal link) {
+    linksIn.remove(link);
+    linksOut.remove(link);
+  }
+
   /*
   /// Adds new connection to this component.
   ///
   /// Do not use it if you are not sure what you do. This is called in [connectTwoComponents] function.
   addConnection(Connection connection) {
-    connections.add(connection);
-  }
-
-  /// Removes existing connection.
-  ///
+    connections.add(connection);tansformers
   /// Do not use it if you are not sure what you do. This is called eg. in [removeLink] function.
-  removeConnection(int connectionId) {
-    connections.removeWhere((conn) => conn.connectionId == connectionId);
-  }
+
   */
   /// Sets the component's parent.
   ///
@@ -364,7 +412,7 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
         //minSize = SizeF(json['min_size'][0], json['min_size'][1]),
         color = m['color'] != null ? Color.hex(m['color']) : defaultColor,
         //zOrder = 0,
-        data = FR(m['data']),
+        data = m['data'],
         super.fromMap(m)
   //.data = EventFractal.controller.request(dataId),
   //; decodeCustomComponentFractal?.call(json['dynamic_data'])
@@ -391,8 +439,8 @@ class ComponentFractal<T extends EventFractal> extends EventFractal
       switch (f.attr) {
         case 'link':
           link.value = f;
-        case _:
-          super.onWrite(f);
+        default:
+          tansformers.update(f.attr, f.content);
       }
     }
     return ok;
