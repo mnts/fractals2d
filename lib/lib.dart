@@ -1,8 +1,8 @@
-export 'controllers/link.dart';
 export 'fractals2d.dart';
-export 'models/component.dart';
-export 'models/custom_component_data.dart';
-export 'models/custom_link_data.dart';
-export 'models/diagram.dart';
-export 'models/link_data.dart';
+export 'extensions/index.dart';
+export 'enums/index.dart';
+export 'models/index.dart';
+export 'controllers/index.dart';
+export 'mixins/index.dart';
+export 'props/index.dart';
 export 'scheme.dart';

@@ -1,6 +1,5 @@
-import 'package:signed_fractal/controllers/events.dart';
+import 'package:fractal/controllers/events.dart';
 import '../models/component.dart';
-import 'package:fractal_base/models/index.dart';
 
 class ComponentsCtrl<T extends ComponentFractal> extends EventsCtrl<T> {
   ComponentsCtrl({
@@ -10,10 +9,5 @@ class ComponentsCtrl<T extends ComponentFractal> extends EventsCtrl<T> {
     required super.attributes,
   }) {
     //initSql();
-  }
-
-  @override
-  put(m) {
-    return super.put(m);
   }
 }

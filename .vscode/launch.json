@@ -8,6 +8,12 @@
             "name": "fractals2d",
             "request": "launch",
             "type": "dart",
+            "program": "bin/server.dart",
+        },
+        {
+            "name": "fractals2d",
+            "request": "launch",
+            "type": "dart",
             "program": "bin/fractals2d.dart"
         }
     ]

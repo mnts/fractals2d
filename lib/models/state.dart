@@ -1,12 +1,11 @@
 import 'package:color/color.dart';
-import 'package:position_fractal/fractals/offset.dart';
-import 'package:position_fractal/props/position.dart';
-import 'package:signed_fractal/models/event.dart';
+import 'package:fractal/models/event.dart';
+import '../lib.dart';
 
 class CanvasState extends EventFractal {
   double _scale = 1.0;
 
-  var position = OffsetF();
+  var position = OffsetF(900, 900);
 
   double mouseScaleSpeed = 0.8;
   @override

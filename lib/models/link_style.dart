@@ -1,5 +1,3 @@
-import 'package:color/color.dart';
-
 enum ArrowType {
   none, // No arrow/shape
   arrow, // Simple triangle arrow
@@ -16,6 +14,7 @@ enum ArrowType {
 }
 
 enum LineType {
+  round,
   solid, // Continuous line
   dashed, // Line with gaps
   dotted, // Line with dots
@@ -30,12 +29,12 @@ class LinkStyle {
   /// Defines the design of the link's front arrowhead.
   ///
   /// There are several designs, choose from [ArrowType] enum.
-  final ArrowType arrowType;
+  final String? front;
 
   /// Defines the design of the link's back arrowhead.
   ///
   /// There are several designs, choose from [ArrowType] enum.
-  final ArrowType backArrowType;
+  final String? back;
 
   /// Defines the size of the link's front arrowhead.
   final double arrowSize;
@@ -47,17 +46,17 @@ class LinkStyle {
   final double lineWidth;
 
   /// Defines the color of the link's line and both arrowheads.
-  final Color color;
+  final int? color;
 
   /// Defines a visual design of a link on the canvas.
   const LinkStyle({
-    this.lineType = LineType.solid,
-    this.arrowType = ArrowType.arrow,
-    this.backArrowType = ArrowType.none,
+    this.lineType = LineType.round,
+    this.front,
+    this.back,
     this.arrowSize = 8,
     this.backArrowSize = 6,
     this.lineWidth = 3,
-    this.color = const Color.rgb(20, 20, 180),
+    this.color,
   })  : assert(lineWidth > 0),
         assert(arrowSize > 0);
 
@@ -90,14 +89,15 @@ class LinkStyle {
     }
   }
 
+  /*
   LinkStyle.fromJson(Map<String, dynamic> json)
       : lineType = LineType.values[json['line_type']],
-        arrowType = ArrowType.values[json['arrow_type']],
+        front = ArrowType.values[json['arrow_type']],
         backArrowType = ArrowType.values[json['back_arrow_type']],
         arrowSize = json['arrow_size'],
         backArrowSize = json['back_arrow_size'],
         lineWidth = json['line_width'],
-        color = Color.hex((json['color']));
+        color = json['color'] ?? 0;
 
   Map<String, dynamic> toJson() => {
         'line_type': lineType.index,
@@ -108,4 +108,5 @@ class LinkStyle {
         'line_width': lineWidth,
         'color': color.toString().split('(0x')[1].split(')')[0],
       };
+      */
 }

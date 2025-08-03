@@ -1,34 +1,21 @@
-import 'package:position_fractal/props/position.dart';
-import 'package:signed_fractal/signed_fractal.dart';
+import 'package:fractal/index.dart';
+import '../models/canvas.dart';
 import '../models/component.dart';
-import '../models/link_data.dart';
 import '../models/state.dart';
+import '../props/offset.dart';
 
 mixin CanvasMix on NodeFractal {
   final cState = CanvasState();
-  //final components = <ComponentFractal>[];
-  /*
-  final components = MapF<ComponentFractal>();
-  final links = MapF<LinkFractal>();
 
-  //final links = <LinkFractal>[];
+  int topZ = 1;
 
-  //bool filter(ComponentFractal c) =>
+  NodeFractal? extLink;
 
-  canvasConsume(event) {
-    if (event is ComponentFractal) {
-      components.input(event);
-      notifyListeners();
-    }
-    if (event is LinkFractal) {
-      links.input(event);
-      notifyListeners();
-    }
-    //super.consume(event);
-  }
-  */
+  ComponentFractal? tap;
 
   late final position = OffsetProp(this);
+
+  bool wheelZoom = true;
 
   @override
   get dontStore => true;
@@ -37,25 +24,24 @@ mixin CanvasMix on NodeFractal {
     notifyListeners();
   }
 
-  /*
-  bool linkExists(int id) {
-    return links.byId(id) != null;
-  }
+  late final components = CatalogFractal(
+    filters: [
+      {'to': hash}
+    ],
+    order: {'z': true},
+    source: ComponentFractal.controller,
+    kind: FKind.tmp,
+  )..synch();
 
-  bool componentExists(int id) {
-    return components.byId(id) != null;
-  }
-
-  */
   LinkFractal? getLink(int id) {
-    return Fractal.map[id] as LinkFractal?;
+    return Fractal.storage[id] as LinkFractal?;
   }
 
   removeComponent(ComponentFractal component) {
     list.removeWhere((f) => f == component);
     list.removeWhere((l) {
       if (component.linksIn.contains(l) || component.linksIn.contains(l)) {
-        l.remove();
+        l.delete();
         return true;
       }
       return false;
@@ -64,26 +50,6 @@ mixin CanvasMix on NodeFractal {
     notifyListeners();
   }
 
-  /// Removes the component's parent from a component.
-  ///
-  /// It also removes child from former parent.
-  removeComponentParent(ComponentFractal component) {
-/*    final _parentId = component.parent;
-    if (_parentId != null) {
-      component.removeParent();
-      _parentId.removeChild(componentId);
-    }
-  */
-  }
-
-  removeParentFromChildren(ComponentFractal component) {
-    final _childrenToRemove = List.from(component.childrenIds);
-    for (var childId in _childrenToRemove) {
-      removeComponentParent(childId);
-    }
-  }
-
-  /// Removes a component with [componentId] and also removes all its children components.
   removeComponentWithChildren(ComponentFractal component) {
     List<ComponentFractal> componentsToRemove = [];
     _removeComponentWithChildren(component, componentsToRemove);
@@ -115,59 +81,46 @@ mixin CanvasMix on NodeFractal {
     notifyListeners();
   }
 
-  setComponentZOrder(ComponentFractal component, int zOrder) {
-    /*
-    assert(
-      componentExists(componentId),
-      'model does not contain this component id: $componentId',
-    );
-    */
-    component.zOrder = zOrder;
-    notifyListeners();
-  }
-
-  /// You cannot use is during any movement, because the order will change so the moving item will change.
-  /// Returns new zOrder
   int moveComponentToTheFront(ComponentFractal component) {
-    int zOrderMax = component.zOrder;
+    int zOrderMax = component.z;
     final l = list.whereType<ComponentFractal>();
     for (var component in l) {
-      if (component.zOrder > zOrderMax) {
-        zOrderMax = component.zOrder;
+      if (component.z > zOrderMax) {
+        zOrderMax = component.z;
       }
     }
-    component.zOrder = zOrderMax + 1;
+    component.z = zOrderMax + 1;
     notifyListeners();
     return zOrderMax + 1;
   }
 
-  /// You cannot use is during any movement, because the order will change so the moving item will change.
-  /// /// Returns new zOrder
   int moveComponentToTheBack(ComponentFractal component) {
-    int zOrderMin = component.zOrder;
+    int zOrderMin = component.z;
     final l = list.whereType<ComponentFractal>();
     for (var component in l) {
-      if (component.zOrder < zOrderMin) {
-        zOrderMin = component.zOrder;
+      if (component.z < zOrderMin) {
+        zOrderMin = component.z;
       }
     }
-    component.zOrder = zOrderMin - 1;
+    component.z = zOrderMin - 1;
     notifyListeners();
     return zOrderMin - 1;
   }
 
   removeLink(LinkFractal link) {
-    //assert(linkExists(linkId), 'model does not contain this link id: $linkId');
-
-    link.source.removeConnection(link);
-    link.target.removeConnection(link);
+    if (link.to case WithLinksF source) {
+      source.removeConnection(link);
+    }
+    if (link.target case WithLinksF target) {
+      target.removeConnection(link);
+    }
     if (link.to case CanvasFractal canvas) {
       canvas
         ..list.remove(link)
         ..notify(link);
     }
 
-    link.remove();
+    link.delete();
     notifyListeners();
   }
 

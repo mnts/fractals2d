@@ -1,5 +1,6 @@
+import 'package:fractal/index.dart';
+
 import 'component.dart';
-import 'link_data.dart';
 
 class DiagramData {
   final List<ComponentFractal> components;

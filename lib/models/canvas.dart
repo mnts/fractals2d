@@ -1,6 +1,6 @@
-import 'package:app_fractal/screen.dart';
 import 'package:fractals2d/mixins/canvas.dart';
-import 'package:signed_fractal/signed_fractal.dart';
+import 'package:fractal/index.dart';
+import '../lib.dart';
 
 class CanvasCtrl<T extends CanvasFractal> extends NodeCtrl<T> {
   CanvasCtrl({
@@ -9,9 +9,6 @@ class CanvasCtrl<T extends CanvasFractal> extends NodeCtrl<T> {
     required super.extend,
     super.attributes = const <Attr>[],
   });
-
-  @override
-  final icon = IconF(0xf523);
 }
 
 class CanvasFractal extends NodeFractal with CanvasMix {
@@ -37,6 +34,32 @@ class CanvasFractal extends NodeFractal with CanvasMix {
   });
 
   @override
+  preload([type]) async {
+    await super.preload();
+    print('canvas done');
+    return 1;
+  }
+
+  final shaped = <ShapeF, List<ComponentFractal>>{};
+  static const wantedShapes = [ShapeF.triE, ShapeF.triW];
+  @override
+  consume(f) {
+    switch (f) {
+      case (ComponentFractal f) when wantedShapes.contains(f.shape):
+        final list = shaped[f.shape] ??= [];
+        list.add(f);
+    }
+    super.consume(f);
+  }
+
+  @override
+  spread(thing) async {
+    await preload();
+    await whenLoaded;
+    shaped[ShapeF.triE]?.firstOrNull?.spread(thing);
+  }
+
+  @override
   //get hashData => [...super.hashData, attr];
 
   CanvasFractal.fromMap(super.d) : super.fromMap();
@@ -45,10 +68,4 @@ class CanvasFractal extends NodeFractal with CanvasMix {
   MP toMap() => {
         ...super.toMap(),
       };
-
-  @override
-  consume(f) {
-    //super.canvasConsume(f);
-    super.consume(f);
-  }
 }

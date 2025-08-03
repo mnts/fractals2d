@@ -1,6 +1,6 @@
 import 'package:fractals2d/mixins/canvas.dart';
 import 'package:fractals2d/models/state.dart';
-import 'package:signed_fractal/signed_fractal.dart';
+import 'package:fractal/index.dart';
 
 class BasePolicySet extends FChangeNotifier {
   final CanvasMix model;
